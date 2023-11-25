@@ -1,7 +1,54 @@
 const express = require("express");
 require("dotenv").config();
+const connectDB = require("./db/connectDB");
+const cors = require("cors");
 const app = express();
 const port = process.env.PORT || 5000;
+
+const mongoose = require("mongoose");
+const bodyParser = require("body-parser");
+
+app.use(
+  cors({
+    origin: ["http://localhost:5173"],
+    credentials: true,
+  })
+);
+
+// Define a mongoose model
+const Post = mongoose.model(
+  "Post",
+  {
+    title: String,
+    publishe: String,
+    tag: Array,
+    description: String,
+    image: String,
+  },
+  "articles"
+);
+
+// Middleware to parse JSON
+app.use(bodyParser.json());
+
+// POST route to create a new post
+app.post("/articles", async (req, res) => {
+  try {
+    const { title, publishe, tag, description, image } = req.body;
+
+    // Create a new post using the Mongoose model
+    const newPost = new Post({ title, publishe, tag, description, image });
+
+    // Save the post to the database
+    await newPost.save();
+
+    // Respond with the created post
+    res.status(201).json(newPost);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 
 app.get("/health", (req, res) => {
   res.send("Server is Running!");
@@ -20,6 +67,12 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
-});
+const main = async () => {
+  await connectDB();
+
+  app.listen(port, () => {
+    console.log(`Example app listening on port ${port}`);
+  });
+};
+
+main();
