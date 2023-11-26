@@ -35,15 +35,33 @@ app.use(bodyParser.json());
 app.post("/articles", async (req, res) => {
   try {
     const { title, publishe, tag, description, image } = req.body;
-
-    // Create a new post using the Mongoose model
     const newPost = new Post({ title, publishe, tag, description, image });
-
-    // Save the post to the database
     await newPost.save();
-
-    // Respond with the created post
     res.status(201).json(newPost);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.get("/articles", async (req, res) => {
+  try {
+    const articles = await Post.find();
+    res.status(200).json(articles);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.get("/articles/:id", async (req, res) => {
+  try {
+    const articleId = req.params.id;
+    const article = await Post.findById(articleId);
+    if (!article) {
+      return res.status(404).json({ error: "Article not found" });
+    }
+    res.status(200).json(article);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
