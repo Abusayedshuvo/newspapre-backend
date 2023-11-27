@@ -3,6 +3,7 @@ const userSchema = new mongoose.Schema({
   name: String,
   email: { type: String, unique: true },
   photo: String,
+  role: { type: String, default: "user" },
 });
 const User = mongoose.model("User", userSchema);
 

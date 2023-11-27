@@ -31,6 +31,15 @@ const Post = mongoose.model(
 // Middleware to parse JSON
 app.use(bodyParser.json());
 
+// JWT Token
+app.post("/jwt", async (req, res) => {
+  const user = req.body;
+  const token = jwt.sign(user, process.env.ACCESS_TOKEN, {
+    expiresIn: "3h",
+  });
+  res.send({ token });
+});
+
 // POST route to create a new post
 app.post("/articles", async (req, res) => {
   try {
@@ -100,6 +109,9 @@ app.get("/users", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
+const userRoutes = require("./routes/users");
+app.use("/users", userRoutes);
 
 app.get("/health", (req, res) => {
   res.send("Server is Running!");
