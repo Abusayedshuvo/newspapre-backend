@@ -113,6 +113,10 @@ app.get("/users", async (req, res) => {
 const userRoutes = require("./routes/users");
 app.use("/users", userRoutes);
 
+// Publisher api
+const publisherRoutes = require("./routes/publishers");
+app.use("/publishers", publisherRoutes);
+
 app.get("/health", (req, res) => {
   res.send("Server is Running!");
 });
