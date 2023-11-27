@@ -10,7 +10,7 @@ const bodyParser = require("body-parser");
 
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
+    origin: [process.env.LOCAL_URL],
     credentials: true,
   })
 );
@@ -68,12 +68,44 @@ app.get("/articles/:id", async (req, res) => {
   }
 });
 
+// User related api
+const User = require("./models/User");
+
+app.post("/users", async (req, res) => {
+  try {
+    const userData = req.body;
+    console.log("Received data:", userData);
+    const existingUser = await User.findOne({ email: userData.email });
+    if (existingUser) {
+      return res.send({ message: "User already exists", insertedId: null });
+    }
+    const newUser = new User(userData);
+    const result = await newUser.save();
+    res.send({
+      message: "User inserted successfully",
+      insertedId: result._id,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.get("/users", async (req, res) => {
+  try {
+    const users = await User.find();
+    res.status(200).json(users);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 app.get("/health", (req, res) => {
   res.send("Server is Running!");
 });
 
 app.all("*", (req, res, next) => {
-  console.log(req.url);
   const error = new Error(`The url is invalid : [${req.url}]`);
   error.status = 404;
   next(error);
