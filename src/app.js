@@ -2,6 +2,7 @@ const express = require("express");
 require("dotenv").config();
 const connectDB = require("./db/connectDB");
 const cors = require("cors");
+var jwt = require("jsonwebtoken");
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -14,6 +15,8 @@ app.use(
     credentials: true,
   })
 );
+app.use(bodyParser.json());
+app.use(express.json());
 
 // Define a mongoose model
 const Post = mongoose.model(
@@ -33,9 +36,6 @@ const Post = mongoose.model(
   "articles"
 );
 
-// Middleware to parse JSON
-app.use(bodyParser.json());
-
 // JWT Token
 app.post("/jwt", async (req, res) => {
   const user = req.body;
@@ -44,6 +44,21 @@ app.post("/jwt", async (req, res) => {
   });
   res.send({ token });
 });
+
+// middlewares
+const verifyToken = (req, res, next) => {
+  if (!req.headers.authorization) {
+    return res.status(401).send({ message: "unauthorized access" });
+  }
+  const token = req.headers.authorization.split(" ")[1];
+  jwt.verify(token, process.env.ACCESS_TOKEN, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ message: "unauthorized access" });
+    }
+    req.decoded = decoded;
+    next();
+  });
+};
 
 // POST route to create a new post
 app.post("/articles", async (req, res) => {
@@ -127,7 +142,7 @@ app.post("/users", async (req, res) => {
   }
 });
 
-app.get("/users", async (req, res) => {
+app.get("/users", verifyToken, async (req, res) => {
   try {
     const users = await User.find();
     res.status(200).json(users);
@@ -137,8 +152,12 @@ app.get("/users", async (req, res) => {
   }
 });
 
+// Patch admin
 const userRoutes = require("./routes/users");
 app.use("/users", userRoutes);
+
+const adminRoutes = require("./routes/admin");
+app.use("/admin", adminRoutes);
 
 // Publisher api
 const publisherRoutes = require("./routes/publishers");
