@@ -23,7 +23,12 @@ const Post = mongoose.model(
     publishe: String,
     tag: Array,
     description: String,
-    image: String,
+    imageUrl: String,
+    authorName: String,
+    authorEmail: String,
+    authorPhoto: String,
+    postedDate: String,
+    status: String,
   },
   "articles"
 );
@@ -43,8 +48,30 @@ app.post("/jwt", async (req, res) => {
 // POST route to create a new post
 app.post("/articles", async (req, res) => {
   try {
-    const { title, publishe, tag, description, image } = req.body;
-    const newPost = new Post({ title, publishe, tag, description, image });
+    const {
+      title,
+      publishe,
+      tag,
+      description,
+      imageUrl,
+      status,
+      postedDate,
+      authorName,
+      authorEmail,
+      authorPhoto,
+    } = req.body;
+    const newPost = new Post({
+      title,
+      publishe,
+      tag,
+      description,
+      imageUrl,
+      status,
+      postedDate,
+      authorName,
+      authorEmail,
+      authorPhoto,
+    });
     await newPost.save();
     res.status(201).json(newPost);
   } catch (error) {
