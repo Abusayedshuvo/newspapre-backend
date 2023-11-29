@@ -31,6 +31,7 @@ const Post = mongoose.model(
     postedDate: String,
     status: String,
     views: { type: Number, default: 0 },
+    premium: Boolean,
   },
   "articles"
 );
@@ -73,6 +74,7 @@ app.post("/articles", async (req, res) => {
       authorName,
       authorEmail,
       authorPhoto,
+      premium,
     } = req.body;
     const newPost = new Post({
       title,
@@ -85,6 +87,7 @@ app.post("/articles", async (req, res) => {
       authorName,
       authorEmail,
       authorPhoto,
+      premium,
     });
     await newPost.save();
     res.status(201).json(newPost);
@@ -138,6 +141,18 @@ app.patch("/articles/:id/update-views", async (req, res) => {
   }
 });
 
+app.get("/premium-articles", async (req, res) => {
+  try {
+    const premiumArticles = await Post.find({ premium: true }).sort({
+      views: -1,
+    });
+    res.status(200).json(premiumArticles);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 // User related api
 const User = require("./models/User");
 
@@ -161,7 +176,7 @@ app.post("/users", async (req, res) => {
   }
 });
 
-app.get("/users", verifyToken, async (req, res) => {
+app.get("/users", async (req, res) => {
   try {
     const users = await User.find();
     res.status(200).json(users);
@@ -171,8 +186,12 @@ app.get("/users", verifyToken, async (req, res) => {
   }
 });
 
-// Patch admin
+// Update user
 const userRoutes = require("./routes/users");
+app.use("/users", userRoutes);
+
+// Patch admin
+// const userRoutes = require("./routes/users");
 app.use("/users", userRoutes);
 
 const adminRoutes = require("./routes/admin");
