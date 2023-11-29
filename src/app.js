@@ -30,6 +30,7 @@ const Post = mongoose.model(
     authorPhoto: String,
     postedDate: String,
     status: String,
+    views: { type: Number, default: 0 },
   },
   "articles"
 );
@@ -95,7 +96,7 @@ app.post("/articles", async (req, res) => {
 
 app.get("/articles", async (req, res) => {
   try {
-    const articles = await Post.find();
+    const articles = await Post.find().sort({ views: -1 });
     res.status(200).json(articles);
   } catch (error) {
     console.error(error);
@@ -111,6 +112,26 @@ app.get("/articles/:id", async (req, res) => {
       return res.status(404).json({ error: "Article not found" });
     }
     res.status(200).json(article);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.patch("/articles/:id/update-views", async (req, res) => {
+  try {
+    const articleId = req.params.id;
+    const updatedArticle = await Post.findByIdAndUpdate(
+      articleId,
+      { $inc: { views: 1 } }, // Increment the views count by 1
+      { new: true }
+    );
+
+    if (!updatedArticle) {
+      return res.status(404).json({ error: "Article not found" });
+    }
+
+    res.status(200).json(updatedArticle);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal Server Error" });

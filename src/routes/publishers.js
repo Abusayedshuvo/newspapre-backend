@@ -36,4 +36,14 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.get("/publisherName", async (req, res) => {
+  try {
+    const publishers = await Publisher.find({}, { publisherName: 1, _id: 0 });
+    res.json({ publishers });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 module.exports = router;
