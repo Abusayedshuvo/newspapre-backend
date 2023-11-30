@@ -10,7 +10,8 @@ const mongoose = require("mongoose");
 
 app.use(
   cors({
-    origin: [process.env.LOCAL_URL],
+    origin: ["https://assignment-12-a54cf.web.app", "http://localhost:5173"],
+    // origin: [process.env.LIVE_URL, process.env.LOCAL_URL],
     credentials: true,
   })
 );
@@ -180,6 +181,31 @@ app.get("/premium-articles", async (req, res) => {
       views: -1,
     });
     res.status(200).json(premiumArticles);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.get("/article-count", async (req, res) => {
+  try {
+    const articles = await Post.find();
+
+    const result = articles.reduce((acc, article) => {
+      const publisherName = article.publishe;
+      if (!acc[publisherName]) {
+        acc[publisherName] = 1;
+      } else {
+        acc[publisherName]++;
+      }
+      return acc;
+    }, {});
+
+    const formattedResult = Object.entries(result).map(
+      ([publisherName, count]) => [publisherName, count]
+    );
+
+    res.status(200).json(formattedResult);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
