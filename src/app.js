@@ -110,6 +110,7 @@ app.get("/articles", async (req, res) => {
 app.get("/articles/:id", async (req, res) => {
   try {
     const articleId = req.params.id;
+    console.log(articleId);
     const article = await Post.findById(articleId);
     if (!article) {
       return res.status(404).json({ error: "Article not found" });
@@ -121,12 +122,44 @@ app.get("/articles/:id", async (req, res) => {
   }
 });
 
+app.get("/articles/user/:email", async (req, res) => {
+  try {
+    const userEmail = req.params.email;
+    const articles = await Post.find({ authorEmail: userEmail });
+
+    res.status(200).json(articles);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 app.patch("/articles/:id/update-views", async (req, res) => {
   try {
     const articleId = req.params.id;
     const updatedArticle = await Post.findByIdAndUpdate(
       articleId,
-      { $inc: { views: 1 } }, // Increment the views count by 1
+      { $inc: { views: 1 } },
+      { new: true }
+    );
+
+    if (!updatedArticle) {
+      return res.status(404).json({ error: "Article not found" });
+    }
+
+    res.status(200).json(updatedArticle);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.patch("/articles/approve/:id", async (req, res) => {
+  try {
+    const articleId = req.params.id;
+    const updatedArticle = await Post.findByIdAndUpdate(
+      articleId,
+      { $set: { status: "Approved" } },
       { new: true }
     );
 
@@ -147,6 +180,38 @@ app.get("/premium-articles", async (req, res) => {
       views: -1,
     });
     res.status(200).json(premiumArticles);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// Update premium status of an article
+app.patch("/articles/premium/:id", async (req, res) => {
+  try {
+    const articleId = req.params.id;
+    const article = await Post.findById(articleId);
+    if (!article) {
+      return res.status(404).json({ error: "Article not found" });
+    }
+    article.premium = true;
+    const updatedArticle = await article.save();
+    res.status(200).json(updatedArticle);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// Delete an article by ID
+app.delete("/articles/:id", async (req, res) => {
+  try {
+    const articleId = req.params.id;
+    const result = await Post.deleteOne({ _id: articleId });
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: "Article not found" });
+    }
+    res.status(200).json({ message: "Article deleted successfully" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
