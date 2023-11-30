@@ -108,6 +108,18 @@ app.get("/articles", async (req, res) => {
   }
 });
 
+app.get("/articles/approved", async (req, res) => {
+  try {
+    const articles = await Post.find({ status: "Approved" }).sort({
+      views: -1,
+    });
+    res.status(200).json(articles);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 app.get("/articles/:id", async (req, res) => {
   try {
     const articleId = req.params.id;
